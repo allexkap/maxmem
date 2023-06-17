@@ -1,18 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 
 size_t collect(pid_t pid) {
-    static char cmd[32] = {};
-    static FILE *pipe = NULL;
-
-    snprintf(cmd, 32, "ps -horss -p%d", pid);
-    pipe = popen(cmd, "r");
-
+    static char path[32] = {};
+    static FILE *file = NULL;
     size_t size = 0;
-    fscanf(pipe, "%d", &size);
-    pclose(pipe);
+
+    snprintf(path, 32, "/proc/%d/status", pid);
+    file = fopen(path, "r");
+
+    char *buff = malloc(64);
+    while (!feof(file)) {
+        getline(&buff, &(size_t){64}, file);
+        if (strncmp(buff, "VmRSS:\t", 6)) continue;
+        printf("%s", buff+7);
+    }
+    pclose(file);
+    free(buff);
 
     return size;
 }
