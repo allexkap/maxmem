@@ -7,12 +7,15 @@
 
 
 size_t get_rss(pid_t pid) {
-    static char path[32] = {};
+
+    static char path[64] = {};
+    FILE *file = NULL;
     size_t size = 0;
 
-    snprintf(path, 32, "/proc/%ld/status", pid);
-    FILE *file = fopen(path, "r");
-    if (!file) return 0;
+
+    snprintf(path, 64, "/proc/%lu/status", pid);
+    file = fopen(path, "r");
+    if (!file) return size;
 
     char *pattern = "VmRSS";
     int pos = 0;
@@ -21,6 +24,15 @@ size_t get_rss(pid_t pid) {
         else if (pattern[pos]) pos = 0;
         else fscanf(file, "%lu", &size);
     }
+    fclose(file);
+
+
+    snprintf(path, 64, "/proc/%lu/task/%lu/children", pid, pid);
+    file = fopen(path, "r");
+    if (!file) return size;
+
+    while (!feof(file) && fscanf(file, "%lu", &pid) > 0)
+        size += get_rss(pid);
     fclose(file);
 
     return size;
