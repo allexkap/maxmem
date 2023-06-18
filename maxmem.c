@@ -2,6 +2,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
+
+
+
+int child_alive = 1;
+
+void sigchld(int) {
+    child_alive = 0;
+}
 
 
 size_t get_rss(pid_t pid) {
@@ -30,6 +39,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    signal(SIGCHLD, &sigchld);
+
     pid_t pid = fork();
     if (!pid) {
         execvp(argv[1], argv+2);
@@ -37,16 +48,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    printf("pid %d\n", pid);
-
-
     int size = 0, res = 0;
-    for (int i = 0; i < 100; ++i) {
+    while (child_alive) {
         res = get_rss(pid);
         if (res > size) size = res;
     }
 
-    printf("%d kB\n", res);
+    fprintf(stdout, "Required memory %lu kB\n", size);
 
     return 0;
 }
