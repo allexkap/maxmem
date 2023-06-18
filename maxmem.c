@@ -28,6 +28,7 @@ size_t get_rss(pid_t pid) {
         else if (pattern[pos]) pos = 0;
         else fscanf(file, "%lu", &size);
     }
+    fclose(file);
 
     return size;
 }
