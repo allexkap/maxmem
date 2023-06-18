@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
     pid_t pid = fork();
     if (!pid) {
-        execvp(argv[1], argv+2);
+        execvp(argv[1], argv+1);
         perror(NULL);
         return 1;
     }
