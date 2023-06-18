@@ -31,9 +31,12 @@ size_t get_rss(pid_t pid) {
     file = fopen(path, "r");
     if (!file) return size;
 
-    while (!feof(file) && fscanf(file, "%lu", &pid) > 0)
-        size += get_rss(pid);
+    size_t pids[64];    // todo
+    pos = 0;
+    while (!feof(file) && pos != 64 && fscanf(file, "%lu", pids + pos++) > 0);
     fclose(file);
+
+    for (int i = 0; i < pos; ++i) size += get_rss(pids[i]);
 
     return size;
 }
