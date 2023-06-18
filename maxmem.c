@@ -4,22 +4,21 @@
 #include <string.h>
 
 
-size_t collect(pid_t pid) {
+size_t get_rss(pid_t pid) {
     static char path[32] = {};
-    static FILE *file = NULL;
     size_t size = 0;
 
-    snprintf(path, 32, "/proc/%d/status", pid);
-    file = fopen(path, "r");
+    snprintf(path, 32, "/proc/%ld/status", pid);
+    FILE *file = fopen(path, "r");
+    if (!file) return 0;
 
-    char *buff = malloc(64);
-    while (!feof(file)) {
-        getline(&buff, &(size_t){64}, file);
-        if (strncmp(buff, "VmRSS:\t", 6)) continue;
-        printf("%s", buff+7);
+    char *pattern = "VmRSS";
+    int pos = 0;
+    while (!feof(file) && !size) {
+        if (getc(file) == pattern[pos]) ++pos;
+        else if (pattern[pos]) pos = 0;
+        else fscanf(file, "%lu", &size);
     }
-    pclose(file);
-    free(buff);
 
     return size;
 }
@@ -43,7 +42,7 @@ int main(int argc, char *argv[]) {
 
     int size = 0, res = 0;
     for (int i = 0; i < 100; ++i) {
-        res = collect(pid);
+        res = get_rss(pid);
         if (res > size) size = res;
     }
 
