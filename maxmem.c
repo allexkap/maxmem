@@ -13,11 +13,11 @@ size_t get_rss(pid_t pid) {
     size_t size = 0;
 
 
-    snprintf(path, 64, "/proc/%lu/status", pid);
+    snprintf(path, 64, "/proc/%u/status", pid);
     file = fopen(path, "r");
     if (!file) return size;
 
-    char *pattern = "VmRSS";
+    static const char *pattern = "VmRSS";
     int pos = 0;
     while (!feof(file) && !size) {
         if (getc(file) == pattern[pos]) ++pos;
@@ -27,7 +27,7 @@ size_t get_rss(pid_t pid) {
     fclose(file);
 
 
-    snprintf(path, 64, "/proc/%lu/task/%lu/children", pid, pid);
+    snprintf(path, 64, "/proc/%u/task/%u/children", pid, pid);
     file = fopen(path, "r");
     if (!file) return size;
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
         if (waitpid(pid, NULL, WNOHANG) == pid) break;
     }
 
-    fprintf(stdout, "Required memory %lu kB\n", size);
+    fprintf(stdout, "Required memory %u kB\n", size);
 
     return 0;
 }
